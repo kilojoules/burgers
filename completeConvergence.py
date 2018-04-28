@@ -380,6 +380,7 @@ if True:
      plt.ylabel(r'$\epsilon$')
      plt.xlabel(r'$t$')
      plt.savefig('time2%s.pdf'%BC)
+     plt.clf()
   
 
 
@@ -415,23 +416,24 @@ if True:
      plt.savefig('errPlotTooMuch.pdf')
      plt.clf()
 
-     z = mini(lambda x: 1e15 * (x*dts[-1] - y[-1]) ** 2, [1]).x
-     plt.plot(dts, dts * z, c='k', lw=3, label=r'$\Delta t$')
-     a = mini(lambda x: 1e18 * (np.exp(x)*dts[-1] ** 2 -y[-1])**2, [20]).x
-     plt.plot(dts, dts ** 2 * np.exp(a), c='k', lw=3, ls='--', label=r'$\Delta t^2$')
-     b = mini(lambda x: 1e20 * (np.exp(x)*dts[-1] ** 3 -y[-1]) ** 2, [50]).x
-     l = plt.plot(dts, dts **3 * np.exp(b), c='k', lw=3, ls='--', label=r'$\Delta t^3$')[0]
-     l.set_dashes([1, 1])
-     c = mini(lambda x: 1e50 * (np.exp(x)*dts[-1] ** 4 -y[-1]) ** 2, [70]).x
-     plt.plot(dts, dts ** 4 * np.exp(c), c='k', lw=3, ls='-.', label=r'$\Delta t^4$')
-     plt.plot(dts, y, c='r', marker='*', label='convergence')
-     plt.legend()
-     plt.yscale('log')
-     plt.xscale('log')
-     plt.ylabel(r'$\epsilon$')
-     plt.xlabel(r'$t$')
-     plt.show()
-
+     if False:
+         z = mini(lambda x: 1e15 * (x*dts[-1] - y[-1]) ** 2, [1]).x
+         plt.plot(dts, dts * z, c='k', lw=3, label=r'$\Delta t$')
+         a = mini(lambda x: 1e18 * (np.exp(x)*dts[-1] ** 2 -y[-1])**2, [20]).x
+         plt.plot(dts, dts ** 2 * np.exp(a), c='k', lw=3, ls='--', label=r'$\Delta t^2$')
+         b = mini(lambda x: 1e20 * (np.exp(x)*dts[-1] ** 3 -y[-1]) ** 2, [50]).x
+         l = plt.plot(dts, dts **3 * np.exp(b), c='k', lw=3, ls='--', label=r'$\Delta t^3$')[0]
+         l.set_dashes([1, 1])
+         c = mini(lambda x: 1e50 * (np.exp(x)*dts[-1] ** 4 -y[-1]) ** 2, [70]).x
+         plt.plot(dts, dts ** 4 * np.exp(c), c='k', lw=3, ls='-.', label=r'$\Delta t^4$')
+         plt.plot(dts, y, c='r', marker='*', label='convergence')
+         plt.legend()
+         plt.yscale('log')
+         plt.xscale('log')
+         plt.ylabel(r'$\epsilon$')
+         plt.xlabel(r'$t$')
+         plt.show()
+    
 
 # not enough convergence
 if True:
@@ -470,20 +472,21 @@ if True:
     plt.savefig('errPlotTooLittle.pdf')
     plt.clf()
     
-    def fitness(a): return 1e25 * np.sum((np.exp(a) * dxs[0] - y_2[0]) ** 2)
-    a = mini(fitness, 4).x
-    def fitness(a): return 1e29 * np.sum((np.exp(a) * dxs[0] ** 2 - y_2[0]) ** 2)
-    b = mini(fitness, 4).x
-    def fitness(a): return 1e29 * np.sum((np.exp(a) * dxs[0] ** 4 - y_2[0]) ** 2)
-    c = mini(fitness, 4).x
-    
-    plt.plot(dxs, y_2, marker='*', label='convergence', markersize=10)
-    plt.plot(dxs, np.exp(c) * dxs ** 4, c='k', label=r'$\Delta X^4$')
-    plt.plot(dxs, np.exp(b) * dxs ** 2, c='k', label=r'$\Delta X^2$')
-    plt.plot(dxs, np.exp(a) * dxs, c='k', label=r'$\Delta X$')
-    plt.xscale('log')
-    plt.yscale('log')
-    plt.legend()
-    plt.xlabel(r'$\Delta x$')
-    plt.ylabel(r'$\epsilon$')
-    plt.show()
+    if False:
+        def fitness(a): return 1e25 * np.sum((np.exp(a) * dxs[0] - y_2[0]) ** 2)
+        a = mini(fitness, 4).x
+        def fitness(a): return 1e29 * np.sum((np.exp(a) * dxs[0] ** 2 - y_2[0]) ** 2)
+        b = mini(fitness, 4).x
+        def fitness(a): return 1e29 * np.sum((np.exp(a) * dxs[0] ** 4 - y_2[0]) ** 2)
+        c = mini(fitness, 4).x
+        
+        plt.plot(dxs, y_2, marker='*', label='convergence', markersize=10)
+        plt.plot(dxs, np.exp(c) * dxs ** 4, c='k', label=r'$\Delta X^4$')
+        plt.plot(dxs, np.exp(b) * dxs ** 2, c='k', label=r'$\Delta X^2$')
+        plt.plot(dxs, np.exp(a) * dxs, c='k', label=r'$\Delta X$')
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.legend()
+        plt.xlabel(r'$\Delta x$')
+        plt.ylabel(r'$\epsilon$')
+        plt.show()
