@@ -4,7 +4,7 @@ from scipy.optimize import minimize as mini
 nu = 0.7
 
 # Spatial Convergence - second order - periodic
-if True:
+if False:
     nu = 0.1
     ET=.004
     nxs = [2 ** _ for _ in range(4, 8)]
@@ -54,7 +54,7 @@ if True:
     plt.clf()
 
 # Spatial Convergence - fourth order - periodic
-if True:
+if False:
     nu = 0.01
     ET=.0002
     nxs = [2 ** _ for _ in range(4, 9)]
@@ -109,14 +109,14 @@ if True:
 
 
 # Spatial Convergence - second order - dirchlet
-if True:
+if False:
     nu = 0.1
     ET=.004
     nxs = [2 ** _ for _ in range(6, 10)]
     nxs.reverse()
     nxs = np.array(nxs)  * 2 ** 1
     nx = nxs[0] * 4
-    print(nx)
+    print(nxs, nx)
     x = np.linspace(0, np.pi, nx+1)
     BC='dirchlet'
     TS='rk4'
@@ -158,7 +158,7 @@ if True:
     plt.clf()
 
 # Spatial Convergence - fourth order - dirchlet
-if True:
+if False:
     nu = 0.001
     ET = .001
     nxs = [2 ** _ for _ in range(4, 8)]
@@ -222,7 +222,7 @@ if True:
      ET = 1e-2
      TS = 'rk2'
      x = np.linspace(0,np.pi, 2002)[:-1]
-     dts = np.linspace(1, 20, 5) * 1e-6
+     dts = np.linspace(10, 20, 5) * 1e-6
      maxdt = geturec(x, nu=NU, evolution_time=ET, timestrategy=TS, returndt=True)
      print(dts, dts[0] / 10)
      if np.max(dts) > maxdt: raise(Exception("Bad time")) ; quit()
@@ -267,7 +267,7 @@ if True:
      plt.clf()
 
 # Time comvergence fourth order - periodic
-if True:
+if False:
      print('hey')
      NU = 1e-3
      ET = 1.
@@ -306,7 +306,7 @@ if True:
 
 
 # Time comvergence fourth order, dirchlet
-if True:
+if False:
      NU = 0.1
      ET = 5e-1
      TS = 'rk4'
@@ -345,13 +345,14 @@ if True:
      plt.clf()
 
 # second order time dirchlet
-if True:
+if False:
      NU = 1e-3
      ET = 2e-2
      TS = 'rk2'
      BC = 'dirchlet'
      x = np.linspace(0,np.pi, 2001)
-     dts = np.linspace(1, 20, 5) * 1e-6
+     dts = np.linspace(1, 2, 5) * 1e-6
+     print(dts, dts[0]/10)
      maxdt = geturec(x, nu=NU, evolution_time=ET, timestrategy=TS, returndt=True)
      if np.max(dts) > maxdt: raise(Exception("Bad time")) ; quit()
      trueu = geturec(x, nu=NU, evolution_time=ET, dt=dts[0] / 10., n_save_t=1, timestrategy=TS, BCs=BC)[:, -1]
@@ -364,11 +365,11 @@ if True:
         print('-->', dt, y[-1])
      #plt.plot(dts, dts, ls='--', marker='x')
      #plt.plot(dts, 1e12 * dts ** 4, ls='--', marker='^')
-     z = mini(lambda x: 1e15 * (x*dts[-1] - y[-1]) ** 2, [1]).x
+     z = mini(lambda x: 1e20 * (x*dts[-1] - y[-1]) ** 2, [1]).x
      plt.plot(dts, dts * z, c='k', lw=3, label=r'$\Delta t$')
-     a = mini(lambda x: 1e18 * (np.exp(x)*dts[-1] ** 2 -y[-1])**2, [20]).x
+     a = mini(lambda x: 1e22 * (np.exp(x)*dts[-1] ** 2 -y[-1])**2, [20]).x
      plt.plot(dts, dts ** 2 * np.exp(a), c='k', lw=3, ls='--', label=r'$\Delta t^2$')
-     b = mini(lambda x: 1e20 * (np.exp(x)*dts[-1] ** 3 -y[-1]) ** 2, [50]).x
+     b = mini(lambda x: 1e23 * (np.exp(x)*dts[-1] ** 3 -y[-1]) ** 2, [50]).x
      l = plt.plot(dts, dts **3 * np.exp(b), c='k', lw=3, ls='--', label=r'$\Delta t^3$')[0]
      l.set_dashes([1, 1])
      c = mini(lambda x: 1e50 * (np.exp(x)*dts[-1] ** 4 -y[-1]) ** 2, [70]).x
@@ -386,7 +387,7 @@ if True:
 
 ## BAD ERROR PLOTS ##
 # too much convergence
-if True:
+if False:
      NU = 1e-3
      ET = 2e-7
      TS = 'rk2'
@@ -436,7 +437,7 @@ if True:
     
 
 # not enough convergence
-if True:
+if False:
     nu = 0.001
     ET=4
     nxs = [2 ** _ for _ in range(3, 7)]
