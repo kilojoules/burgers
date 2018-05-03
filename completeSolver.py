@@ -72,7 +72,7 @@ def diffusive_dudt(un, nu, dx, strategy='5c', BCs='dirchlet'):
 
 # Velocity Evolution Function. Accepts initial and boundary conditions, returns time evolution history.
 #@nb.jit
-def geturec(x, nu=.05, evolution_time=1, u0=None, n_save_t=50, ubl=0., ubr=0., diffstrategy='5c', convstrategy='4c', timestrategy='fe', dt=None, returndt=False, BCs='periodic'):
+def geturec(x, nu=.05, evolution_time=1, u0=None, n_save_t=50, ubl=0., ubr=0., diffstrategy='5c', convstrategy='4c', timestrategy='rk4', dt=None, returndt=False, BCs='periodic'):
 
     dx = x[1] - x[0]
 
