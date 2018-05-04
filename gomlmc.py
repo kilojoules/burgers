@@ -1,8 +1,11 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-dat = pd.read_csv('./mysampledsamples.dat')
-dat.rename(columns={'nx1000':'lf', 'nx5000':'hf', 'nu':'visc'}, inplace=1)
+dat = pd.read_csv('./newsamps.dat')
+dat.rename(columns={'nx7000':'hf', 'nx400':'lf', 'nu':'visc'}, inplace=1)
+#dat.rename(columns={'nx1000':'lf', 'nx5000':'hf', 'nu':'visc'}, inplace=1)
+#dat = pd.read_csv('./mysampledsamples.dat')
+#dat.rename(columns={'nx1000':'lf', 'nx5000':'hf', 'nu':'visc'}, inplace=1)
 
 LW = .1
 f, ax = plt.subplots()
