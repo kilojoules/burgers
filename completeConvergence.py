@@ -90,6 +90,36 @@ if True:
     plt.close()
 
 
+    f, ax = plt.subplots(2)
+    plt.subplots_adjust(bottom=-0.4)
+    ax[0].plot(dxs, y_2, marker='*', label='convergence', markersize=10)
+    ax[0].plot(dxs, np.exp(c) * dxs ** 4, c='k', label=r'$\Delta X^4$', ls='--')
+    ax[0].plot(dxs, np.exp(b) * dxs ** 2, c='k', label=r'$\Delta X^2$', ls='-.')
+    ax[0].plot(dxs, np.exp(a) * dxs, c='k', label=r'$\Delta X$', ls=':')
+    ax[0].set_xscale('log')
+    ax[0].set_yscale('log')
+    ax[0].legend()
+    ax[0].set_xlabel(r'$\Delta x$')
+    ax[0].set_ylabel(r'$\epsilon$')
+    #plt.plot(np.abs(dgradu[:, -1]**4), label=r'$\frac{\partial^2u}{\partial x^2}^4$')
+    #plt.plot(np.abs(gradu[:, -1]**4), label=r'$\frac{\partial u}{\partial x}^4$')
+    #plt.plot((np.abs(gradu[:, -1]) + np.abs(dgradu[:, -1]))**4, label=r'$(\frac{\partial u}{\partial x} + \frac{\partial^2u}{\partial x^2})^4$')
+    for ii, nx in enumerate(nxs):
+       x = np.linspace(0, np.pi, nx+1)[:-1]
+       ax[1].plot(x, errs[ii], label=r'$\Delta x=%f$'%dxs[ii])
+    ax[1].set_yscale('log')
+    ax[1].legend()
+    ax[0].set_ylabel(r'$|\epsilon|$')
+    ax[1].set_ylabel(r'$\epsilon$')
+    ax[1].set_xlabel(r'x')
+#ax[a.set_yscale('log')
+    plt.savefig('convplots/space_2_periodic.pdf', bbox_inches='tight')
+    plt.clf(); plt.cla() ; plt.close()
+    plt.cla()
+    plt.close()
+
+
+
 
 
 # Spatial Convergence - fourth order - periodic
@@ -159,6 +189,7 @@ if True:
     ax[0].plot(x, np.abs(gradu), label=r'$|\frac{\partial u}{\partial x}|$')
     ax[0].plot(x, np.abs(nu * dgradu - gradu), label='|du/dt|', ls='--')
     ax[0].set_xlabel('x')
+    ax[0].set_ylabel(r'$|\epsilon|$')
     ax[1].set_xlabel('x')
     ax[0].legend(ncol=4, bbox_to_anchor=[1, 1.5])
     for ii, nx in enumerate(nxs):
@@ -168,6 +199,29 @@ if True:
     ax[1].legend()
     ax[1].set_ylabel(r'$\epsilon$')
     plt.savefig('error/space_4_periodic.pdf', bbox_inches='tight')
+    plt.clf() ; plt.cla() ; plt.close()
+
+
+    f, ax = plt.subplots(2)
+    plt.subplots_adjust(bottom=-0.4)
+    ax[0].plot(dxs, y_2, marker='*', label='convergence', markersize=10)
+    ax[0].plot(dxs, np.exp(c) * dxs ** 4, c='k', label=r'$\Delta X^4$', ls='--')
+    ax[0].plot(dxs, np.exp(b) * dxs ** 2, c='k', label=r'$\Delta X^2$', ls='-.')
+    ax[0].plot(dxs, np.exp(a) * dxs, c='k', label=r'$\Delta X$', ls=':')
+    ax[0].legend()
+    ax[0].set_xlabel(r'$\Delta x$')
+    ax[0].set_ylabel(r'$|\epsilon|$')
+    ax[0].set_xscale('log')
+    ax[0].set_yscale('log')
+    ax[0].legend(ncol=4, bbox_to_anchor=[1, 1.5])
+    for ii, nx in enumerate(nxs):
+       x = np.linspace(0, np.pi, nx+1)[:-1]
+       ax[1].plot(x, errs[ii], label=r'$\Delta x=%f$'%dxs[ii])
+    ax[1].set_yscale('log')
+    ax[1].set_xlabel('x')
+    ax[1].legend()
+    ax[1].set_ylabel(r'$\epsilon$')
+    plt.savefig('convplots/space_4_periodic.pdf', bbox_inches='tight')
     plt.clf() ; plt.cla() ; plt.close()
 
 
@@ -251,6 +305,29 @@ if True:
     plt.savefig('error/space_2_%s.pdf'%BC, bbox_inches='tight')
     plt.clf(); plt.cla() ; plt.close()
 
+
+    f, ax = plt.subplots(2)
+    plt.subplots_adjust(bottom=-0.4)
+    ax[0].plot(dxs, y_2, marker='*', label='convergence', markersize=10)
+    ax[0].plot(dxs, np.exp(c) * dxs ** 4, c='k', label=r'$\Delta X^4$', ls='--')
+    ax[0].plot(dxs, np.exp(b) * dxs ** 2, c='k', label=r'$\Delta X^2$', ls='-.')
+    ax[0].plot(dxs, np.exp(a) * dxs, c='k', label=r'$\Delta X$', ls=':')
+    ax[0].set_xscale('log')
+    ax[0].set_yscale('log')
+    ax[0].legend()
+    ax[0].set_xlabel(r'$\Delta x$')
+    ax[0].set_ylabel(r'$|\epsilon|$')
+    for ii, nx in enumerate(nxs):
+       x = np.linspace(0, np.pi, nx+1)
+       ax[1].plot(x, errs[ii], label=r'$\Delta x=%f$'%dxs[ii])
+    ax[1].set_xlabel('x')
+    ax[1].set_yscale('log')
+    ax[1].legend()
+    ax[1].set_ylabel(r'$\epsilon$')
+    plt.savefig('convplots/space_2_%s.pdf'%BC, bbox_inches='tight')
+    plt.clf(); plt.cla() ; plt.close()
+
+
 # Spatial Convergence - fourth order - dirchlet
 if True:
     nu = 0.001
@@ -333,6 +410,28 @@ if True:
     plt.savefig('error/space_4_%s.pdf'%BC, bbox_inches='tight')
     plt.clf(); plt.cla() ; plt.close()
 
+    f, ax = plt.subplots(2)
+    plt.subplots_adjust(bottom=-0.4)
+    ax[0].plot(dxs, y_2, marker='*', label='convergence', markersize=10, ls='--')
+    ax[0].plot(dxs, np.exp(c) * dxs ** 4, c='k', label=r'$\Delta X^4$', ls='-.')
+    ax[0].plot(dxs, np.exp(b) * dxs ** 2, c='k', label=r'$\Delta X^2$', ls=':')
+    ax[0].plot(dxs, np.exp(a) * dxs, c='k', label=r'$\Delta X$')
+    ax[0].legend()
+    ax[0].set_ylabel(r'$|\epsilon|$')
+    ax[0].set_xscale('log')
+    ax[0].set_yscale('log')
+    ax[0].set_xlabel(r'$\Delta x$')
+    ax[1].set_xlabel('x')
+    for ii, nx in enumerate(nxs):
+       x = np.linspace(0, np.pi, nx+1)
+       ax[1].plot(x, errs[ii], label=r'$\Delta x=%f$'%dxs[ii])
+       print('***',errs[ii])
+    ax[1].set_yscale('log')
+    ax[1].legend()
+    ax[1].set_ylabel(r'$\epsilon$')
+    plt.savefig('convplots/space_4_%s.pdf'%BC, bbox_inches='tight')
+    plt.clf(); plt.cla() ; plt.close()
+
 
 
 # Time comvergence second order - periodic
@@ -396,13 +495,13 @@ if True:
      #plt.plot(dts, dts, ls='--', marker='x')
      #plt.plot(dts, 1e12 * dts ** 4, ls='--', marker='^')
      z = mini(lambda x: 1e15 * (x*dts[-1] - y[-1]) ** 2, [1]).x
-     plt.plot(dts, dts * z, c='k', lw=3, label=r'$\Delta t$')
      a = mini(lambda x: 1e18 * (np.exp(x)*dts[-1] ** 2 -y[-1])**2, [20]).x
-     plt.plot(dts, dts ** 2 * np.exp(a), c='k', lw=3, ls='--', label=r'$\Delta t^2$')
      b = mini(lambda x: 1e20 * (np.exp(x)*dts[-1] ** 3 -y[-1]) ** 2, [50]).x
      l = plt.plot(dts, dts **3 * np.exp(b), c='k', lw=3, ls='--', label=r'$\Delta t^3$')[0]
      l.set_dashes([1, 1])
      c = mini(lambda x: 1e50 * (np.exp(x)*dts[-1] ** 4 -y[-1]) ** 2, [70]).x
+     plt.plot(dts, dts * z, c='k', lw=3, label=r'$\Delta t$')
+     plt.plot(dts, dts ** 2 * np.exp(a), c='k', lw=3, ls='--', label=r'$\Delta t^2$')
      plt.plot(dts, dts ** 4 * np.exp(c), c='k', lw=3, ls='-.', label=r'$\Delta t^4$')
      plt.plot(dts, y, c='r', marker='*', label='convergnce', markersize=10)
      plt.legend()
@@ -438,6 +537,29 @@ if True:
      ax[1].set_ylabel(r'$\epsilon$')
      plt.savefig('error/time_2_%s.pdf'%BC, bbox_inches='tight')
      plt.clf(); plt.cla() ; plt.close()
+
+     f, ax = plt.subplots(2)
+     plt.subplots_adjust(bottom=-0.4)
+     ax[0].plot(dts, dts * z, c='k', lw=3, label=r'$\Delta t$')
+     ax[0].plot(dts, dts ** 2 * np.exp(a), c='k', lw=3, ls='--', label=r'$\Delta t^2$')
+     ax[0].plot(dts, dts ** 4 * np.exp(c), c='k', lw=3, ls='-.', label=r'$\Delta t^4$')
+     ax[0].plot(dts, y, c='r', marker='*', label='convergnce', markersize=10)
+     ax[0].legend()
+     ax[0].set_yscale('log')
+     ax[0].set_xscale('log')
+     ax[0].set_ylabel(r'$|\epsilon|$')
+     ax[0].set_xlabel(r'$\Delta t$')
+     ax[1].set_xlabel('x')
+     for ii in range(dts.size):
+        ax[1].plot(x, errs[ii], label=r'$\Delta t=%f$'%dts[ii])
+     ax[1].set_yscale('log')
+     ax[1].legend()
+     ax[1].set_ylabel(r'$\epsilon$')
+     plt.savefig('convplots/time_2_%s.pdf'%BC, bbox_inches='tight')
+     plt.clf(); plt.cla() ; plt.close()
+
+
+
 # Time comvergence fourth order - periodic
 if True:
      print('hey')
@@ -463,11 +585,11 @@ if True:
      #z = mini(lambda x: 1e24 * (np.exp(x)*dts[-1] - y[-1]) ** 2, [1]).x
      #plt.plot(dts, dts * z, c='k', lw=3, label=r'$\Delta t$')
      a = mini(lambda x: 1e25 * (np.exp(x)*dts[-1] ** 2 -y[-1])**2, [20]).x
-     plt.plot(dts, dts ** 2 * np.exp(a), c='k', lw=3, ls='--', label=r'$\Delta t^2$')
      b = mini(lambda x: 1e25 * (np.exp(x)*dts[-1] ** 3 -y[-1]) ** 2, [50]).x
      l = plt.plot(dts, dts **3 * np.exp(b), c='k', lw=3, ls='--', label=r'$\Delta t^3$')[0]
      l.set_dashes([1, 1])
      c = mini(lambda x: 1e24 * (np.exp(x)*dts[-1] ** 4 -y[-1]) ** 2, [70]).x
+     plt.plot(dts, dts ** 2 * np.exp(a), c='k', lw=3, ls='--', label=r'$\Delta t^2$')
      plt.plot(dts, dts ** 4 * np.exp(c), c='k', lw=3, ls='-.', label=r'$\Delta t^4$')
      plt.plot(dts, y, c='r', marker='*', label='convergence', markersize=10)
      plt.legend()
@@ -504,6 +626,27 @@ if True:
      plt.clf(); plt.cla() ; plt.close()
 
 
+     f, ax = plt.subplots(2)
+     plt.subplots_adjust(bottom=-0.4)
+     ax[0].plot(dts, dts ** 2 * np.exp(a), c='k', lw=3, ls='--', label=r'$\Delta t^2$')
+     ax[0].plot(dts, dts ** 4 * np.exp(c), c='k', lw=3, ls='-.', label=r'$\Delta t^4$')
+     ax[0].plot(dts, y, c='r', marker='*', label='convergence', markersize=10)
+     ax[0].legend()
+     ax[0].set_yscale('log')
+     ax[0].set_xscale('log')
+     ax[0].set_ylabel(r'$|\epsilon|$')
+     ax[0].set_xlabel(r'$\Delta t$')
+     ax[1].set_xlabel('x')
+     for ii in range(dts.size):
+        ax[1].plot(x, errs[ii], label=r'$\Delta t=%f$'%dts[ii])
+     ax[1].set_yscale('log')
+     ax[1].legend()
+     ax[1].set_ylabel(r'$\epsilon$')
+     plt.savefig('convplots/time_4_%s.pdf'%BC, bbox_inches='tight')
+     plt.clf(); plt.cla() ; plt.close()
+
+
+
 # Time comvergence fourth order, dirchlet
 if True:
      nu = 0.1
@@ -531,11 +674,11 @@ if True:
      #z = mini(lambda x: 1e18 * (np.exp(x)*dts[-1] - y[-1]) ** 2, [1]).x
      #plt.plot(dts, dts * z, c='k', lw=3, label=r'$\Delta t$')
      a = mini(lambda x: 1e20 * (np.exp(x)*dts[-1] ** 2 -y[-1])**2, [20]).x
-     plt.plot(dts, dts ** 2 * np.exp(a), c='k', lw=3, ls='--', label=r'$\Delta t^2$')
      #b = mini(lambda x: 1e20 * (np.exp(x)*dts[-1] ** 3 -y[-1]) ** 2, [50]).x
      #l = plt.plot(dts, dts **3 * np.exp(b), c='k', lw=3, ls='--', label=r'$\Delta t$')[0]
      #l.set_dashes([1, 1])
      c = mini(lambda x: 1e18 * (np.exp(x)*dts[-1] ** 4 -y[-1]) ** 2, [70]).x
+     plt.plot(dts, dts ** 2 * np.exp(a), c='k', lw=3, ls='--', label=r'$\Delta t^2$')
      plt.plot(dts, dts ** 4 * np.exp(c), c='k', lw=3, ls='-.', label=r'$\Delta t^4$')
      plt.plot(dts, y, c='r', marker='*', markersize=10, label='convergence')
      plt.legend()
@@ -572,6 +715,26 @@ if True:
      plt.savefig('error/time_4_%s.pdf'%BC, bbox_inches='tight')
      plt.clf(); plt.cla() ; plt.close()
 
+     f, ax = plt.subplots(2)
+     plt.subplots_adjust(bottom=-0.4)
+     ax[0].plot(dts, dts ** 2 * np.exp(a), c='k', lw=3, ls='--', label=r'$\Delta t^2$')
+     ax[0].plot(dts, dts ** 4 * np.exp(c), c='k', lw=3, ls='-.', label=r'$\Delta t^4$')
+     ax[0].plot(dts, y, c='r', marker='*', markersize=10, label='convergence')
+     ax[0].legend()
+     ax[0].set_yscale('log')
+     ax[0].set_xscale('log')
+     ax[0].set_ylabel(r'$|\epsilon|$')
+     ax[0].set_xlabel(r'$\Delta t$')
+     ax[1].set_xlabel('x')
+     for ii in range(dts.size):
+        ax[1].plot(x, errs[ii], label=r'$\Delta t=%f$'%dts[ii])
+     ax[1].set_yscale('log')
+     ax[1].legend()
+     ax[1].set_ylabel(r'$\epsilon$')
+     plt.savefig('convplots/time_4_%s.pdf'%BC, bbox_inches='tight')
+     plt.clf(); plt.cla() ; plt.close()
+
+
 # second order time dirchlet
 if True:
      nu = 1e-3
@@ -596,13 +759,13 @@ if True:
      #plt.plot(dts, dts, ls='--', marker='x')
      #plt.plot(dts, 1e12 * dts ** 4, ls='--', marker='^')
      z = mini(lambda x: 1e20 * (x*dts[-1] - y[-1]) ** 2, [1]).x
-     plt.plot(dts, dts * z, c='k', lw=3, label=r'$\Delta t$', ls='-.')
      a = mini(lambda x: 1e22 * (np.exp(x)*dts[-1] ** 2 -y[-1])**2, [20]).x
-     plt.plot(dts, dts ** 2 * np.exp(a), c='k', lw=3, ls='--', label=r'$\Delta t^2$')
      b = mini(lambda x: 1e23 * (np.exp(x)*dts[-1] ** 3 -y[-1]) ** 2, [50]).x
+     c = mini(lambda x: 1e50 * (np.exp(x)*dts[-1] ** 4 -y[-1]) ** 2, [70]).x
+     plt.plot(dts, dts * z, c='k', lw=3, label=r'$\Delta t$', ls='-.')
+     plt.plot(dts, dts ** 2 * np.exp(a), c='k', lw=3, ls='--', label=r'$\Delta t^2$')
      l = plt.plot(dts, dts **3 * np.exp(b), c='k', lw=3, ls='--', label=r'$\Delta t^3$')[0]
      l.set_dashes([1, 1])
-     c = mini(lambda x: 1e50 * (np.exp(x)*dts[-1] ** 4 -y[-1]) ** 2, [70]).x
      plt.plot(dts, dts ** 4 * np.exp(c), c='k', lw=3, ls='-.', label=r'$\Delta t^4$')
      plt.plot(dts, y, c='r', marker='*', label='convergence')
      plt.legend()
@@ -639,6 +802,27 @@ if True:
      plt.savefig('error/time_2_%s.pdf'%BC, bbox_inches='tight')
      plt.clf(); plt.cla() ; plt.close()
   
+     f, ax = plt.subplots(2)
+     plt.subplots_adjust(bottom=-0.4)
+     ax[0].plot(dts, dts * z, c='k', lw=3, label=r'$\Delta t$', ls='-.')
+     ax[0].plot(dts, dts ** 2 * np.exp(a), c='k', lw=3, ls='--', label=r'$\Delta t^2$')
+     ax[0].plot(dts, dts ** 4 * np.exp(c), c='k', lw=3, ls='-.', label=r'$\Delta t^4$')
+     ax[0].plot(dts, y, c='r', marker='*', label='convergence')
+     ax[0].legend()
+     ax[0].set_yscale('log')
+     ax[0].set_xscale('log')
+     ax[0].set_ylabel(r'$|\epsilon|$')
+     ax[0].set_xlabel(r'$\Delta t$')
+     ax[1].set_xlabel('x')
+     for ii in range(dts.size):
+        ax[1].plot(x, errs[ii], label=r'$\Delta t=%f$'%dts[ii])
+     ax[1].set_yscale('log')
+     ax[1].legend()
+     ax[1].set_ylabel(r'$\epsilon$')
+     plt.savefig('convplots/time_2_%s.pdf'%BC, bbox_inches='tight')
+     plt.clf(); plt.cla() ; plt.close()
+
+
 
 
 ## BAD ERROR PLOTS ##
@@ -683,6 +867,7 @@ if True:
          l.set_dashes([1, 1])
          c = mini(lambda x: 1e50 * (np.exp(x)*dts[-1] ** 4 -y[-1]) ** 2, [70]).x
          f, ax = plt.subplots(2)
+         plt.subplots_adjust(bottom=-0.4)
          ax[0].plot(dts, dts ** 1 * np.exp(z), c='k', lw=3, ls=':', label=r'$\Delta t^4$')
          ax[0].plot(dts, dts ** 2 * np.exp(b), c='k', lw=3, ls='--', label=r'$\Delta t^4$')
          ax[0].plot(dts, dts ** 4 * np.exp(c), c='k', lw=3, ls='-.', label=r'$\Delta t^4$')
@@ -690,15 +875,15 @@ if True:
          ax[0].legend()
          ax[0].set_yscale('log')
          ax[0].set_xscale('log')
-         ax[0].set_ylabel(r'$\epsilon$')
-         ax[0].set_xlabel(r'$t$')
+         ax[0].set_ylabel(r'$|\epsilon|$')
+         ax[0].set_xlabel(r'$\Delta t$')
          for ii in range(len(dts)):
             ax[1].plot(x, errs[ii], label=r'$\Delta t = dxs[ii]$')
          ax[1].legend()
          ax[1].set_yscale('log')
          ax[1].set_xlabel('x')
-         ax[1].set_ylabel(r'$|u^{\Delta x}(x) - u^{True}(x)|$')
-         plt.savefig('toomuch2.pdf')
+         ax[1].set_ylabel(r'$\epsilon$')
+         plt.savefig('toomuch2.pdf', bbox_inches='tight')
          plt.clf(); plt.cla() ; plt.close()
     
 
@@ -757,7 +942,7 @@ if True:
         ax[0].set_yscale('log')
         ax[0].legend()
         ax[0].set_xlabel(r'$\Delta x$')
-        ax[0].set_ylabel(r'$\epsilon$')
+        ax[0].set_ylabel(r'$|\epsilon|$')
 
         for ii, nx in enumerate(nxs):
            print(nx)
@@ -766,6 +951,6 @@ if True:
         ax[1].legend()
         ax[1].set_yscale('log')
         ax[1].set_xlabel('x')
-        ax[1].set_ylabel(r'$|u^{\Delta x}(x) - u^{True}(x)|$')
+        ax[1].set_ylabel(r'$\epsilon$')
 
         plt.savefig('toolittle2.pdf', bbox_inches='tight')
