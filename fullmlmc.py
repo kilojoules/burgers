@@ -18,10 +18,10 @@ LW = .1
 ALPHA = 0.5
 f, ax = plt.subplots(4)
 plt.subplots_adjust(bottom=-.7, hspace=.4)
-TEST = 102
-BS = int(dat.shape[0] / ((TEST-2) * 6))
+TEST = 50
+BS = int(dat.shape[0] / ((TEST) * 6))
 dats = np.array_split(dat, BS)
-x = np.array([int(s) for s in np.arange(10, TEST, 2)])
+x = np.array([int(s) for s in np.arange(10, TEST+1, 2)])
 epsh = np.zeros((x.size, BS))
 epscv = np.zeros((x.size, BS))
 timecv = np.zeros((x.size, BS))
@@ -96,14 +96,14 @@ ax[0].set_xscale('log')
 ax[2].set_ylabel(r'$\epsilon$')
 ax[3].set_ylabel('CPU Time (hours)')
 ax[3].set_xlabel('High Fidelity Samples')
-f.suptitle('%i sets, %i (minus training points) Training points, %i LF samples'%(BS, dat.shape[0], dat.shape[0]))
+f.suptitle('%i sets, %i test points, %i LF samples'%(BS, dat.shape[0]-TEST, dat.shape[0]))
 plt.savefig('mlmcresults.pdf', bbox_inches='tight')
 plt.clf()
 plt.close()
 
 xs, ys = [], []
 y2s = []
-for ii in [0, np.where(x==20)[0][0], np.where(x==TEST-2)[0][0]]:
+for ii in [0, np.where(x==20)[0][0], np.where(x==TEST)[0][0]]:
 #for ii in [0, np.where(x==60)[0][0], np.where(x==TEST-2)[0][0]]:
     thesex, thesey, vesey = [], [], []
     for jj in range(epsh.shape[1]):
@@ -131,28 +131,30 @@ for ii in [0, np.where(x==20)[0][0], np.where(x==TEST-2)[0][0]]:
     ax[0].set_ylabel('probability density') 
     ax[1].set_ylabel('probability density') 
     #ax[0].set_label('%i sets, %i LF samples, %i HF samples'%(BS, TEST, 10*TEST))
-    f.suptitle('%i sets, %i LF samples, %i test HF samples'%(BS, x[ii], dat.shape[0] - x[ii]))
+    f.suptitle('%i sets, %i LF samples, %i test HF samples'%(BS, x[ii], dat.shape[0] - TEST))
     f.savefig('hist_%i.pdf'%x[ii], bbox_inches='tight') ; plt.clf()
 
 newd = pd.DataFrame() 
 newd['x'] = xs
 newd['y'] = ys
 newd['y2'] = y2s
-f, ax = plt.subplots(2, sharex=True)
+f, ax = plt.subplots(1, 2, sharey=True)
+plt.subplots_adjust(right=1.5)
 #opts = {'inner':'stripplot'}
-opts = {'scale': 'count', 'inner':'quart', 'cut':0}
+#opts = {'scale': 'count', 'inner':'quart', 'cut':0}
+opts = {}
 #ax[0].set_yscale('log')
 #ax[1].set_yscale('log')
-sns.violinplot(x='x', y='y', data=newd, ax=ax[0], **opts)
-sns.stripplot(x='x', y='y', data=newd, ax=ax[0], color='k', size=1, jitter=1)
-sns.violinplot(x='x', y='y2', data=newd, ax=ax[1], **opts)
-sns.stripplot(x='x', y='y2', data=newd, ax=ax[1], color='k', size=1, jitter=1)
+sns.violinplot(x='x', y='y', data=newd, ax=ax[0], **opts, color='white')
+#sns.stripplot(x='x', y='y', data=newd, ax=ax[0], color='k', size=1)
+sns.violinplot(x='x', y='y2', data=newd, ax=ax[1], **opts, color='white')
 #for ii in [0, 1]: ax[ii].set_ylim(min(y2s), max(ys))
-plt.xlabel('High Fidelity Samples')
+for ii in range(2): ax[ii].set_xlabel('High Fidelity Samples')
 ax[0].set_ylabel(r'$\epsilon_{HF}$')
 ax[1].set_ylabel(r'$\epsilon_{CV}$')
-f.suptitle('%i sets, %i (minus training points) test samples, %i LF samples'%(BS, dat.shape[0], dat.shape[0]))
-plt.savefig('./violins.pdf')
+f.suptitle('%i sets, %i test HF samples, %i LF samples'%(BS, dat.shape[0] - TEST, dat.shape[0]), y=1.)
+plt.tight_layout()
+plt.savefig('./violins.pdf', bbox_inches='tight')
 plt.clf()
 
 f, ax = plt.subplots(1, 2, sharey=True)
