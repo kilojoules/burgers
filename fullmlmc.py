@@ -3,9 +3,13 @@ import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.neighbors import KernelDensity
-dat = pd.read_csv('./timedsamples.dat')
-dat.rename(columns={'nx7000':'hf', 'nx400':'lf', 'nu':'visc'}, inplace=1)
-dat = dat.convert_objects(convert_numeric=True)
+d1 = pd.read_csv('./d1.dat')
+d2 = pd.read_csv('./collected.csv')
+d3 = pd.read_csv('./timedsamples.dat')
+dat = pd.concat([d1, d2, d3])
+dat.rename(columns={'nx7000':'hf', 'nx400':'lf', 'nu':'visc', 'tnx7000':'t1', 'tnx400': 't2'}, inplace=1)
+TRUTH = np.mean(dat.nx7000)
+#dat = dat.convert_objects(convert_numeric=True)
 #dat = dat[:100000]
 #dat.reset_index(inplace=True)
 #dat.rename(columns={'nx1000':'lf', 'nx5000':'hf', 'nu':'visc'}, inplace=1)
@@ -20,8 +24,9 @@ f, ax = plt.subplots(4)
 plt.subplots_adjust(bottom=-.7, hspace=.4)
 TEST = 50
 BS = int(dat.shape[0] / ((TEST) * 6))
+LF = 200
 dats = np.array_split(dat, BS)
-x = np.array([int(s) for s in np.arange(10, TEST+1, 2)])
+x = np.array([int(s) for s in np.arange(2, TEST+1, 2)])
 epsh = np.zeros((x.size, BS))
 epscv = np.zeros((x.size, BS))
 timecv = np.zeros((x.size, BS))
@@ -36,10 +41,10 @@ for _ in range(BS):
     def cv2(x):
         alpha = np.corrcoef(dat.hf.values[:x], dat.lf.values[:x])[0][1] * np.sqrt(np.var(dat.hf.values[:x]) / np.var(dat.lf.values[:x]))
         m = (np.mean(dat.hf[TEST:]) - (
-            np.mean(dat.hf.values[:x]) + alpha * (np.mean(dat.lf) - np.mean(dat.lf.values[:x])))) ** 2
-        std = np.var(dat.hf.values[:x]) / x + (1. / float(x) - 1. /float(len(dat.lf))) * (np.var(dat.lf) * alpha ** 2 - 2 * alpha * np.corrcoef(dat.lf.values[:x], dat.hf.values[:x])[0][1] * np.sqrt(np.var(dat.lf) * np.var(dat.hf[:x])))
-        timed = (np.sum(dat.t1[:x]) + np.sum(dat.t2)) / 3600
-        return m, std, alpha, timed, np.mean(dat.hf.values[:x]) + alpha * (np.mean(dat.lf) - np.mean(dat.lf.values[:x]))
+            np.mean(dat.hf.values[:x]) + alpha * (np.mean(dat.lf[:LF]) - np.mean(dat.lf.values[:x])))) ** 2
+        std = np.var(dat.hf.values[:x]) / x + (1. / float(x) - 1. /float(len(dat.lf[:LF]))) * (np.var(dat.lf[:LF]) * alpha ** 2 - 2 * alpha * np.corrcoef(dat.lf.values[:x], dat.hf.values[:x])[0][1] * np.sqrt(np.var(dat.lf[:LF]) * np.var(dat.hf[:x])))
+        timed = (np.sum(dat.t1[:x]) + np.sum(dat.t2[:LF])) / 3600
+        return m, std, alpha, timed, np.mean(dat.hf.values[:x]) + alpha * (np.mean(dat.lf[:LF]) - np.mean(dat.lf.values[:x]))
     cv2 = np.vectorize(cv2)
             
     print (_, dat.shape)
@@ -93,13 +98,33 @@ ax[2].plot(x, epsh.mean(1), c='b', label='mean')
 ax[2].set_yscale('log')
 ax[2].set_xscale('log')
 ax[0].set_xscale('log')
+ax[3].set_xscale('log')
+#ax[3].set_yscale('log')
 ax[2].set_ylabel(r'$\epsilon$')
-ax[3].set_ylabel('CPU Time (hours)')
+ax[3].set_ylabel('CPU Time (Hours)')
 ax[3].set_xlabel('High Fidelity Samples')
 f.suptitle('%i sets, %i test points, %i LF samples'%(BS, dat.shape[0]-TEST, dat.shape[0]))
-plt.savefig('mlmcresults.pdf', bbox_inches='tight')
+plt.savefig('mlmcresults%i.pdf'%LF, bbox_inches='tight')
 plt.clf()
 plt.close()
+
+np.save('timecv_%s'%LF, timecv.mean(1))
+np.save('errorcv_%s'%LF, epscv.mean(1))
+#timecv2k = np.load('timecv_2000.npy')
+#epscv2k = np.load('errorcv_2000.npy')
+timecv200 = np.load('timecv_200.npy')
+epscv200 = np.load('errorcv_200.npy')
+plt.plot(timecv.mean(1), epscv.mean(1), label='CV, %i LF samples'%LF, marker='x')
+plt.plot(timecv200, epscv200, label='CV, 200 LF samples', marker='x')
+#plt.plot(timecv2k, epscv2k, label='CV, 2000 samples')
+plt.plot(timeh.mean(1), epsh.mean(1), label='HF')
+plt.xlabel('cpu time (hours)')
+plt.ylabel('Error')
+plt.xscale('log')
+plt.yscale('log')
+plt.legend()
+plt.savefig('timeContours%i.pdf'%LF, bbox_inches='tight')
+
 
 xs, ys = [], []
 y2s = []
@@ -132,13 +157,13 @@ for ii in [0, np.where(x==20)[0][0], np.where(x==TEST)[0][0]]:
     ax[1].set_ylabel('probability density') 
     #ax[0].set_label('%i sets, %i LF samples, %i HF samples'%(BS, TEST, 10*TEST))
     f.suptitle('%i sets, %i LF samples, %i test HF samples'%(BS, x[ii], dat.shape[0] - TEST))
-    f.savefig('hist_%i.pdf'%x[ii], bbox_inches='tight') ; plt.clf()
+    f.savefig('hist_%i_%i.pdf'%(x[ii], LF), bbox_inches='tight') ; plt.clf()
 
 newd = pd.DataFrame() 
 newd['x'] = xs
 newd['y'] = ys
 newd['y2'] = y2s
-f, ax = plt.subplots(1, 2, sharey=True)
+f, ax = plt.subplots(2)
 plt.subplots_adjust(right=1.5)
 #opts = {'inner':'stripplot'}
 #opts = {'scale': 'count', 'inner':'quart', 'cut':0}
@@ -154,7 +179,7 @@ ax[0].set_ylabel(r'$\epsilon_{HF}$')
 ax[1].set_ylabel(r'$\epsilon_{CV}$')
 f.suptitle('%i sets, %i test HF samples, %i LF samples'%(BS, dat.shape[0] - TEST, dat.shape[0]), y=1.)
 plt.tight_layout()
-plt.savefig('./violins.pdf', bbox_inches='tight')
+plt.savefig('./violins%s.pdf'%LF, bbox_inches='tight')
 plt.clf()
 
 f, ax = plt.subplots(1, 2, sharey=True)

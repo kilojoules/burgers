@@ -4,18 +4,23 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.neighbors import KernelDensity
 from scipy.integrate import simps
+from sklearn.grid_search import GridSearchCV
+from sklearn.cross_validation import LeaveOneOut, KFold
 
 # error pdfs #
-if False:
-    dat = pd.read_csv('./timedsamples.dat')
+if True:
+    d1 = pd.read_csv('./d1.dat')
+    d2 = pd.read_csv('./collected.csv') 
+    d3 = pd.read_csv('./timedsamples.dat')
+    dat = pd.concat([d1, d2, d3])
     dat.rename(columns={'nx7000':'hf', 'nx400':'lf', 'nu':'visc'}, inplace=1)
-    dat = dat.convert_objects(convert_numeric=True)
     f, ax = plt.subplots(2)
-    plt.subplots_adjust(bottom=-.7)
+    plt.subplots_adjust(hspace=0.5)
     TEST = 50
-    bigBS = int(dat.shape[0] / (TEST * 6))
+    bigBS = int(dat.shape[0] / (TEST * 41))
     dats = np.array_split(dat, bigBS)
-    samplesx = [2]
+    samplesx = [20]
+    print('*', bigBS)
     while samplesx[-1]*2 < bigBS:
         samplesx.append(samplesx[-1] * 2)
     colors = plt.cm.coolwarm(np.linspace(0, 1, len(samplesx)))
@@ -59,19 +64,21 @@ if False:
             np.save('thesey%i'%BS, thesey)
             thesey = np.array(thesey)
             vesey = np.array(vesey)
-            xx = np.linspace(0, max(vesey), 100)
+            xx = np.linspace(np.min(vesey), max(vesey), 100)
             #xx = np.linspace(min(vesey), max(vesey), 100)
             print('---->', min(thesey), max(thesey))
-            kde2 = KernelDensity(kernel='gaussian', bandwidth=np.mean(vesey))
+            kde2 = KernelDensity(kernel='gaussian', bandwidth=.05)
             kde2.fit(vesey.reshape(-1, 1))
             pdff = np.exp(kde2.score_samples(xx.reshape(-1, 1)))
-            ax[0].plot(xx, pdff / np.sum(pdff), label=BS, c=colors[ll])
-            xx = np.linspace(0, 2 * max(thesey), 1000)
-            #xx = np.linspace(min(thesey), max(thesey), 100)
-            kde = KernelDensity(kernel='gaussian', bandwidth=np.mean(thesey))
+            ax[0].plot(xx, pdff / simps(pdff, xx), label=BS, c=colors[ll])
+            #xx = np.linspace(0, 2 * max(thesey), 1000)
+            xx = np.linspace(min(thesey), max(thesey), 100)
+            kde = KernelDensity(kernel='gaussian', bandwidth=.01)
             kde.fit(thesey.reshape(-1, 1))
             pdff = np.exp(kde.score_samples(xx.reshape(-1, 1)))
-            ax[1].plot(xx, pdff, label=BS, c=colors[ll])
+            ax[1].plot(xx, pdff / simps(pdff, xx), label=BS, c=colors[ll])
+    ax[0].hist(vesey, 200, alpha=0.3, normed=True)
+    ax[1].hist(thesey, 200, alpha=0.3, normed=True)
     ax[0].set_xlabel('Error, HF') 
     ax[1].set_xlabel('Error, CV') 
     l = ax[0].legend(ncol=3)
@@ -89,28 +96,34 @@ if True:
     dat = dat.convert_objects(convert_numeric=True)
     f, ax = plt.subplots(2, sharex=True)
     #plt.subplots_adjust(bottom=-2, hspace=1)
-    SAMPS = [25]
-    while SAMPS[-1] < 1000: SAMPS.append(SAMPS[-1] * 2)
+    SAMPS = [500]
+    while SAMPS[-1] < 30000: SAMPS.append(SAMPS[-1] * 2)
     colors = plt.cm.coolwarm(np.linspace(0, 1, len(SAMPS)))
     for ll, n in enumerate(SAMPS):
         HF = dat.hf[:n]
         LF = dat.lf[:n]
         xx = np.linspace(10, 26, 1000)
-        #xx = np.linspace(min(HF), max(HF), 100)
-        kde = KernelDensity(kernel='gaussian')
-        kde.fit(HF.reshape(-1, 1))
+        #bandwidths = 10 ** np.linspace(-1, 1, 100)
+        #print(n)
+        #grid = GridSearchCV(KernelDensity(kernel='cosine'),
+        #            {'bandwidth': bandwidths},
+        #            cv=KFold(5))
+        #grid.fit(HF[:, None])
+        kde = KernelDensity(kernel='gaussian', bandwidth=.1)
+        kde.fit(HF[:, None])
         myfit = np.exp(kde.score_samples(xx.reshape(-1, 1)))
         myfit /= simps(myfit, xx)
         ax[0].plot(xx, np.exp(kde.score_samples(xx.reshape(-1, 1))), c=colors[ll], label=n)
-        ax[0].legend(ncol=3)
         #xx = np.linspace(min(LF), max(LF), 100)
-        kde = KernelDensity(kernel='gaussian')
+        kde = KernelDensity(kernel='gaussian', bandwidth=.1)
         kde.fit(LF.reshape(-1, 1))
         pdff = np.exp(kde.score_samples(xx.reshape(-1, 1)))
         pdff /= simps(pdff, xx)
         ax[1].plot(xx, pdff, c=colors[ll])
-    ax[0].hist(HF, 30, alpha=0.3, normed=True)
-    ax[1].hist(LF, 30, alpha=0.3, normed=True)
+    l = ax[0].legend(ncol=4, bbox_to_anchor=[.9, 1.5])
+    l.set_title('Number of Samples')
+    ax[0].hist(HF, 50, alpha=0.6, normed=True)
+    ax[1].hist(LF, 50, alpha=0.6, normed=True)
     ax[1].set_xlabel(r'$\max(\nabla u)_{400 Cells}$')
     ax[0].set_xlabel(r'$\max(\nabla u)_{7000 Cells}$')
     ax[0].set_ylabel('probability density') 
@@ -192,7 +205,7 @@ if False:
     vdat['NSAMPS'] = NSAMPS
     vdat['HF'] = exps
     vdat['CV'] = CC
-    f, ax = plt.subplots(1, 2, sharey=True)
+    f, ax = plt.subplots(2)
     plt.subplots_adjust(right=1.5)
     sns.violinplot(x='NSAMPS', y='HF', data=vdat, ax=ax[0], color='white')
     sns.violinplot(x='NSAMPS', y='CV', data=vdat, ax=ax[1], color='white')
