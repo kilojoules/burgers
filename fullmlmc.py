@@ -8,7 +8,7 @@ d2 = pd.read_csv('./collected.csv')
 d3 = pd.read_csv('./timedsamples.dat')
 dat = pd.concat([d1, d2, d3])
 dat.rename(columns={'nx7000':'hf', 'nx400':'lf', 'nu':'visc', 'tnx7000':'t1', 'tnx400': 't2'}, inplace=1)
-TRUTH = np.mean(dat.nx7000)
+TRUTH = np.mean(dat.hf)
 #dat = dat.convert_objects(convert_numeric=True)
 #dat = dat[:100000]
 #dat.reset_index(inplace=True)
@@ -23,10 +23,10 @@ ALPHA = 0.5
 f, ax = plt.subplots(4)
 plt.subplots_adjust(bottom=-.7, hspace=.4)
 TEST = 50
-BS = int(dat.shape[0] / ((TEST) * 6))
-LF = 200
+BS = int(dat.shape[0] / ((300)))
+LF = 300
 dats = np.array_split(dat, BS)
-x = np.array([int(s) for s in np.arange(2, TEST+1, 2)])
+x = np.array([int(s) for s in np.arange(2, TEST+1, 1)])
 epsh = np.zeros((x.size, BS))
 epscv = np.zeros((x.size, BS))
 timecv = np.zeros((x.size, BS))
@@ -35,12 +35,12 @@ for _ in range(BS):
     dat = dats[_]
     def mch(x):
          timed = np.sum(dat.t1[:x]) / 3600
-         return (np.mean(dat.hf[TEST:]) - np.mean(dat.hf.values[:x])) ** 2, np.var(dat.hf.values[:x]) / x, timed, np.mean(dat.hf.values[:x]), np.mean(dat.hf[TEST:])
+         return (np.mean(TRUTH) - np.mean(dat.hf.values[:x])) ** 2, np.var(dat.hf.values[:x]) / x, timed, np.mean(dat.hf.values[:x]), TRUTH
     mch = np.vectorize(mch)
     
     def cv2(x):
         alpha = np.corrcoef(dat.hf.values[:x], dat.lf.values[:x])[0][1] * np.sqrt(np.var(dat.hf.values[:x]) / np.var(dat.lf.values[:x]))
-        m = (np.mean(dat.hf[TEST:]) - (
+        m = (TRUTH - (
             np.mean(dat.hf.values[:x]) + alpha * (np.mean(dat.lf[:LF]) - np.mean(dat.lf.values[:x])))) ** 2
         std = np.var(dat.hf.values[:x]) / x + (1. / float(x) - 1. /float(len(dat.lf[:LF]))) * (np.var(dat.lf[:LF]) * alpha ** 2 - 2 * alpha * np.corrcoef(dat.lf.values[:x], dat.hf.values[:x])[0][1] * np.sqrt(np.var(dat.lf[:LF]) * np.var(dat.hf[:x])))
         timed = (np.sum(dat.t1[:x]) + np.sum(dat.t2[:LF])) / 3600
@@ -103,32 +103,49 @@ ax[3].set_xscale('log')
 ax[2].set_ylabel(r'$\epsilon$')
 ax[3].set_ylabel('CPU Time (Hours)')
 ax[3].set_xlabel('High Fidelity Samples')
-f.suptitle('%i sets, %i test points, %i LF samples'%(BS, dat.shape[0]-TEST, dat.shape[0]))
+f.suptitle('%i sets, %i LF samples'%(BS, LF))
 plt.savefig('mlmcresults%i.pdf'%LF, bbox_inches='tight')
 plt.clf()
 plt.close()
 
 np.save('timecv_%s'%LF, timecv.mean(1))
 np.save('errorcv_%s'%LF, epscv.mean(1))
-#timecv2k = np.load('timecv_2000.npy')
-#epscv2k = np.load('errorcv_2000.npy')
-timecv200 = np.load('timecv_200.npy')
-epscv200 = np.load('errorcv_200.npy')
+#timecv2k = np.load('timecv_800.npy')
+#epscv2k = np.load('errorcv_800.npy')
+timecv150 = np.load('timecv_150.npy')
+epscv150 = np.load('errorcv_150.npy')
 plt.plot(timecv.mean(1), epscv.mean(1), label='CV, %i LF samples'%LF, marker='x')
-plt.plot(timecv200, epscv200, label='CV, 200 LF samples', marker='x')
-#plt.plot(timecv2k, epscv2k, label='CV, 2000 samples')
+plt.plot(timecv150, epscv150, label='CV, 150 LF samples', marker='x')
+#plt.plot(timecv2k, epscv2k, label='CV, 700 LF samples', marker='x')
 plt.plot(timeh.mean(1), epsh.mean(1), label='HF')
-plt.xlabel('cpu time (hours)')
-plt.ylabel('Error')
+print("--------> ", 150, 300, 'HF', timecv150[-1], timecv.mean(1)[-1], timeh.mean(1)[-1])
+print("--------> err", 150, 300, 'HF', epscv150[-1], epscv.mean(1)[-1], epsh.mean(1)[-1])
+plt.xlabel('Average CPU Time (hours)')
+plt.ylabel(r'$\mathbb{E}[\epsilon]$')
+#plt.ylabel('Average Error')
 plt.xscale('log')
 plt.yscale('log')
 plt.legend()
 plt.savefig('timeContours%i.pdf'%LF, bbox_inches='tight')
+plt.clf()
+
+
+
+plt.plot(x, epscv.mean(1), label='CV, %i LF samples'%LF, marker='x')
+plt.plot(x, epscv150, label='CV, 150 LF samples', marker='x')
+plt.plot(x, epsh.mean(1), label='HF')
+plt.xlabel('Number of High-Fidelity Samples')
+plt.ylabel(r'$\mathbb{E}[\epsilon]$')
+plt.xscale('log')
+plt.yscale('log')
+plt.legend()
+plt.savefig('errorSampContours%i.pdf'%LF, bbox_inches='tight')
+plt.clf()
 
 
 xs, ys = [], []
 y2s = []
-for ii in [0, np.where(x==20)[0][0], np.where(x==TEST)[0][0]]:
+for ii in [np.where(x==2)[0][0], np.where(x==5)[0][0], np.where(x==TEST)[0][0]]:
 #for ii in [0, np.where(x==60)[0][0], np.where(x==TEST-2)[0][0]]:
     thesex, thesey, vesey = [], [], []
     for jj in range(epsh.shape[1]):
@@ -151,12 +168,12 @@ for ii in [0, np.where(x==20)[0][0], np.where(x==TEST)[0][0]]:
     kde = KernelDensity(kernel='gaussian', bandwidth=np.mean(thesey))
     kde.fit(thesey.reshape(-1, 1))
     ax[1].plot(xx, np.exp(kde.score_samples(xx.reshape(-1, 1))))
-    ax[0].set_xlabel('Error, HF') 
-    ax[1].set_xlabel('Error, CV') 
+    ax[0].set_ylabel(r'$\epsilon(Q^{HF})$')
+    ax[1].set_ylabel(r'$\epsilon(Q^{CV})$')
     ax[0].set_ylabel('probability density') 
     ax[1].set_ylabel('probability density') 
     #ax[0].set_label('%i sets, %i LF samples, %i HF samples'%(BS, TEST, 10*TEST))
-    f.suptitle('%i sets, %i LF samples, %i test HF samples'%(BS, x[ii], dat.shape[0] - TEST))
+    f.suptitle('%i sets, %i LF samples'%(BS, LF))
     f.savefig('hist_%i_%i.pdf'%(x[ii], LF), bbox_inches='tight') ; plt.clf()
 
 newd = pd.DataFrame() 
@@ -174,38 +191,41 @@ sns.violinplot(x='x', y='y', data=newd, ax=ax[0], **opts, color='white')
 #sns.stripplot(x='x', y='y', data=newd, ax=ax[0], color='k', size=1)
 sns.violinplot(x='x', y='y2', data=newd, ax=ax[1], **opts, color='white')
 #for ii in [0, 1]: ax[ii].set_ylim(min(y2s), max(ys))
-for ii in range(2): ax[ii].set_xlabel('High Fidelity Samples')
-ax[0].set_ylabel(r'$\epsilon_{HF}$')
-ax[1].set_ylabel(r'$\epsilon_{CV}$')
-f.suptitle('%i sets, %i test HF samples, %i LF samples'%(BS, dat.shape[0] - TEST, dat.shape[0]), y=1.)
+for ii in range(2): 
+    ax[ii].set_xlabel('High Fidelity Samples')
+    ax[ii].set_ylim(newd.y.min(), newd.y.max())
+ax[0].set_ylabel(r'$\epsilon(Q^{HF})$')
+ax[1].set_ylabel(r'$\epsilon(Q^{CV})$')
+f.suptitle('%i sets, %i HF samples, %i LF samples'%(BS, TEST, LF), y=1.)
 plt.tight_layout()
 plt.savefig('./violins%s.pdf'%LF, bbox_inches='tight')
 plt.clf()
 
-f, ax = plt.subplots(1, 2, sharey=True)
-plt.subplots_adjust(hspace=2)
-#plt.subplots_adjust(bottom=-.7)
-bees = len(newd[newd.x==x[-1]]) * 5
-percs = np.zeros((bees, 100))
-vpercs = np.zeros((bees, 100))
-for ii in range(bees):
-    msk = np.random.rand(len(newd)) < 0.8
-    subset = newd[msk]
-    subset = subset[subset.x==subset.x.iloc[-1]]
-    for jj in range(percs.shape[1]):
-        percs[ii, jj] = np.percentile(subset.y2, jj)
-        vpercs[ii, jj] = np.percentile(subset.y, jj)
-
-ax[0].fill_between(np.linspace(0, 100, 100), np.percentile(vpercs, 10, 0), np.percentile(vpercs, 90, 0), facecolor='gray')
-ax[1].fill_between(np.linspace(0, 100, 100), np.percentile(percs, 10, 0), np.percentile(percs, 90, 0), facecolor='gray')
-ax[1].plot(np.linspace(0, 100, 100), np.mean(percs, 0))
-ax[0].plot(np.linspace(0, 100, 100), np.mean(vpercs, 0))
-ax[0].set_xlabel('Percentile')
-ax[1].set_xlabel('Percentile')
-ax[0].set_ylabel('Error, HF')
-ax[1].set_ylabel('Error, CV')
-ax[0].set_yscale('log')
-ax[1].set_yscale('log')
-f.suptitle('%i sets, %i LF samples, %i test HF samples'%(BS, x[-1], dat.shape[0]-x[-1]))
-plt.savefig('%i_sets_%i_LF_samples_%i_test_samples.pdf'%(BS, x[-1], dat.shape[0]-x[-1]), bbox_inches='tight')
-plt.clf()
+if False:
+    f, ax = plt.subplots(1, 2, sharey=True)
+    plt.subplots_adjust(hspace=2)
+    #plt.subplots_adjust(bottom=-.7)
+    bees = len(newd[newd.x==x[-1]]) * 5
+    percs = np.zeros((bees, 100))
+    vpercs = np.zeros((bees, 100))
+    for ii in range(bees):
+        msk = np.random.rand(len(newd)) < 0.8
+        subset = newd[msk]
+        subset = subset[subset.x==subset.x.iloc[-1]]
+        for jj in range(percs.shape[1]):
+            percs[ii, jj] = np.percentile(subset.y2, jj)
+            vpercs[ii, jj] = np.percentile(subset.y, jj)
+    
+    ax[0].fill_between(np.linspace(0, 100, 100), np.percentile(vpercs, 10, 0), np.percentile(vpercs, 90, 0), facecolor='gray')
+    ax[1].fill_between(np.linspace(0, 100, 100), np.percentile(percs, 10, 0), np.percentile(percs, 90, 0), facecolor='gray')
+    ax[1].plot(np.linspace(0, 100, 100), np.mean(percs, 0))
+    ax[0].plot(np.linspace(0, 100, 100), np.mean(vpercs, 0))
+    ax[0].set_xlabel('Percentile')
+    ax[1].set_xlabel('Percentile')
+    ax[0].set_ylabel(r'$\epsilon(Q^{HF})$')
+    ax[1].set_ylabel(r'$\epsilon(Q^{CV})$')
+    ax[0].set_yscale('log')
+    ax[1].set_yscale('log')
+    f.suptitle('%i sets, %i LF samples'%(BS, LF))
+    plt.savefig('%i_sets_%i_LF_samples_%i_test_samples.pdf'%(BS, x[-1], dat.shape[0]-x[-1]), bbox_inches='tight')
+    plt.clf()

@@ -2,8 +2,9 @@ from completeSolver import geturec
 import matplotlib.pyplot as plt
 import numpy as np
 #nus = [.5, .1, .05, .01, .005, 0.001, .0005, .0001, .00005, .00001, .000005, .000001]
-nus = [.5, .1, .05, .01, .005, 0.001, .0005]
-ET = 2.
+nus = [.5, .1, .05, .01, .005, 0.001, .0005, .00005, .00001]
+#nus = [.5, .1, .05, .01, .005]
+ET = 1.
 nxs = []
 for nu in nus:
     nx = 25
@@ -23,10 +24,10 @@ for nu in nus:
         gradu[0] = (u[1] - u[-1]) / ( 2 * dx)
         l2.append(ax[1].plot(x, gradu, label=nx, lw=.5)[0])
         qoi = np.max(np.abs(gradu))
-        qois.append(qoi)
         #qoi = x[np.argmax(gradu)]
+        qois.append(qoi)
         if oldqoi is not None:
-            print(qoi, oldqoi, np.max(gradu), np.abs(qoi - oldqoi)/qoi < 1e-3, (qoi - oldqoi)/qoi)
+            print(qoi, oldqoi, np.max(gradu),np.abs(qoi - oldqoi)/qoi)
             if np.abs(qoi - oldqoi)/qoi < 1e-2:
             #if np.sqrt(np.sum((u[0::2] - oldu)**2)/oldu.size) < 1e-2:
                break
@@ -44,5 +45,18 @@ for nu in nus:
     plt.clf()
     nxs.append(nx)
 print(nus, nxs)
+# for tol of 5e-2,
 # [0.5, 0.1, 0.05, 0.01, 0.005, 0.001, 0.0005] 
-# [50, 200, 200, 1600, 1600, 12800, 25600]
+# [50,  50,  100,  400,  800,   6400,  12800]
+
+# for tol of 1e-2,
+# [0.5, 0.1, 0.05, 0.01, 0.005, 0.001, 0.0005] 
+# [50,  200, 200,  1600, 1600,  12800, 25600]
+
+# for 5e-3,
+# [0.5, 0.1, 0.05, 0.01, 0.005] 
+# [100, 200, 200,  1600, 3200]
+
+# for 1e-3,
+# [0.5, 0.1, 0.05, 0.01, 0.005] 
+# [200, 400, 800,  3200, 6400]

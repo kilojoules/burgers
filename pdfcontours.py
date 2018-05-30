@@ -17,9 +17,10 @@ if True:
     f, ax = plt.subplots(2)
     plt.subplots_adjust(hspace=0.5)
     TEST = 50
-    bigBS = int(dat.shape[0] / (TEST * 41))
+    LF = 300
+    bigBS = int(dat.shape[0] / (LF))
     dats = np.array_split(dat, bigBS)
-    samplesx = [20]
+    samplesx = [125]
     print('*', bigBS)
     while samplesx[-1]*2 < bigBS:
         samplesx.append(samplesx[-1] * 2)
@@ -40,7 +41,7 @@ if True:
             def cv2(x):
                 alpha = np.corrcoef(dat.hf.values[:x], dat.lf.values[:x])[0][1] * np.sqrt(np.var(dat.hf.values[:x]) / np.var(dat.lf.values[:x]))
                 m = (np.mean(dat.hf[TEST:]) - (
-                    np.mean(dat.hf.values[:x]) + alpha * (np.mean(dat.lf) - np.mean(dat.lf.values[:x])))) ** 2
+                    np.mean(dat.hf.values[:x]) + alpha * (np.mean(dat.lf[:LF]) - np.mean(dat.lf.values[:x])))) ** 2
                 std = np.var(dat.hf.values[:x]) / x + (1. / float(x) - 1. /float(len(dat.lf))) * (np.var(dat.lf) * alpha ** 2 - 2 * alpha * np.corrcoef(dat.lf.values[:x], dat.hf.values[:x])[0][1] * np.sqrt(np.var(dat.lf) * np.var(dat.hf[:x])))
                 return m, std, alpha, np.mean(dat.hf.values[:x]) + alpha * (np.mean(dat.lf) - np.mean(dat.lf.values[:x]))
             cv2 = np.vectorize(cv2)
@@ -79,21 +80,26 @@ if True:
             ax[1].plot(xx, pdff / simps(pdff, xx), label=BS, c=colors[ll])
     ax[0].hist(vesey, 200, alpha=0.3, normed=True)
     ax[1].hist(thesey, 200, alpha=0.3, normed=True)
-    ax[0].set_xlabel('Error, HF') 
-    ax[1].set_xlabel('Error, CV') 
+    ax[0].set_xlabel(r'$\epsilon(Q^{HF})$') 
+    ax[1].set_xlabel(r'$\epsilon(Q^{CV})$') 
     l = ax[0].legend(ncol=3)
     l.set_title('Sample Sets')
     ax[0].set_ylabel('probability density') 
     ax[1].set_ylabel('probability density') 
-    f.suptitle('%i HF samples, %i LF samples, %i test HF samples'%(TEST, dat.shape[0], dat.shape[0]-TEST))
+    f.suptitle('%i sets, %i HF samples, %i LF samples'%(bigBS, TEST, LF))
     f.savefig('sampleContours.pdf', bbox_inches='tight') ; plt.clf()
     plt.clf()
     plt.close()
     
-if True:    
-    dat = pd.read_csv('./timedsamples.dat')
+
+# raw values
+if False:    
+    d1 = pd.read_csv('./d1.dat')
+    d2 = pd.read_csv('./collected.csv')
+    d3 = pd.read_csv('./timedsamples.dat')
+    dat = pd.concat([d1, d2, d3])
     dat.rename(columns={'nx7000':'hf', 'nx400':'lf', 'nu':'visc'}, inplace=1)
-    dat = dat.convert_objects(convert_numeric=True)
+    #dat = dat.convert_objects(convert_numeric=True)
     f, ax = plt.subplots(2, sharex=True)
     #plt.subplots_adjust(bottom=-2, hspace=1)
     SAMPS = [500]
@@ -133,12 +139,15 @@ if True:
     
     
 # expected values #
-if False:
+if True:
     
-    dat = pd.read_csv('./timedsamples.dat')
+    d1 = pd.read_csv('./d1.dat')
+    d2 = pd.read_csv('./collected.csv')
+    d3 = pd.read_csv('./timedsamples.dat')
+    dat = pd.concat([d1, d2, d3])
     dat.rename(columns={'nx7000':'hf', 'nx400':'lf', 'nu':'visc'}, inplace=1)
-    dat = dat.convert_objects(convert_numeric=True)
     TEST = 50
+    LF = 300
     bigBS = int(dat.shape[0] / (TEST * 6))
     dats = np.array_split(dat, bigBS)
     f, ax = plt.subplots(2, sharex=True)
@@ -155,11 +164,11 @@ if False:
             def cv2(x):
                 alpha = np.corrcoef(dat.hf.values[:x], dat.lf.values[:x])[0][1] * np.sqrt(np.var(dat.hf.values[:x]) / np.var(dat.lf.values[:x]))
                 m = (np.mean(dat.hf[TEST:]) - (
-                    np.mean(dat.hf.values[:x]) + alpha * (np.mean(dat.lf) - np.mean(dat.lf.values[:x])))) ** 2
+                    np.mean(dat.hf.values[:x]) + alpha * (np.mean(dat.lf[:LF]) - np.mean(dat.lf.values[:x])))) ** 2
                 std = np.var(dat.hf.values[:x]) / x + (1. / float(x) - 1. /float(len(dat.lf))) * (np.var(dat.lf) * alpha ** 2 - 2 * alpha * np.corrcoef(dat.lf.values[:x], dat.hf.values[:x])[0][1] * np.sqrt(np.var(dat.lf) * np.var(dat.hf[:x])))
                 return m, std, alpha, np.mean(dat.hf.values[:x]) + alpha * (np.mean(dat.lf) - np.mean(dat.lf.values[:x]))
             CC.append(cv2(50)[-1])
-        xx = np.linspace(15, 17, 1000)
+        xx = np.linspace(14, 18, 1000)
         #xx = np.linspace(.9 * np.min(exps), 1.1 * np.max(exps), 1000)
         kde = KernelDensity(kernel='gaussian', bandwidth=1e-1)
         kde.fit(np.array(exps).reshape(-1, 1))
@@ -175,10 +184,11 @@ if False:
     leg.set_title("Number of sample sets")
     ax[0].hist(exps, 30, normed=True, alpha=0.8, zorder=1)
     ax[1].hist(CC, 30, normed=True, alpha=0.8, zorder=2)
-    ax[0].set_xlabel(r'$Q_{HF}$')
-    ax[1].set_xlabel(r'$Q_{CV}$')
+    ax[0].set_xlabel(r'$Q^{HF}$')
+    ax[1].set_xlabel(r'$Q^{CV}$')
     ax[0].set_ylabel('probability density') 
     ax[1].set_ylabel('probability density') 
+    plt.suptitle('%i sets, %i LF samples'%(bigBS, dat.shape[0]), y=1.)
     plt.savefig('./qPDFs.pdf', bbox_inches='tight')
     plt.clf()
     plt.close()
@@ -209,9 +219,11 @@ if False:
     plt.subplots_adjust(right=1.5)
     sns.violinplot(x='NSAMPS', y='HF', data=vdat, ax=ax[0], color='white')
     sns.violinplot(x='NSAMPS', y='CV', data=vdat, ax=ax[1], color='white')
-    for ii in range(2): ax[ii].set_xlabel("Number of High Fidelity Samples")
-    ax[0].set_ylabel(r'$Q_{HF}$')
-    ax[1].set_ylabel(r'$Q_{CV}$')
-    plt.suptitle('%i sets, %i test HF samples, %i LF samples'%(bigBS, dat.shape[0] - TEST, dat.shape[0]), y=1.)
+    for ii in range(2): 
+        ax[ii].set_xlabel("Number of High Fidelity Samples")
+        ax[ii].set_ylim(vdat.HF.min(), vdat.HF.max())
+    ax[0].set_ylabel(r'$Q^{HF}$')
+    ax[1].set_ylabel(r'$Q^{CV}$')
+    plt.suptitle('%i sets, %i LF samples'%(bigBS, dat.shape[0]), y=1.)
     plt.tight_layout()
     plt.savefig('expectedViolins.pdf', bbox_inches='tight')

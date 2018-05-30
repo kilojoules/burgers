@@ -15,9 +15,9 @@ print(dat.shape)
 LW = .1
 ALPHA = 0.5
 TEST = 52
-BS = int(dat.shape[0] / ((TEST-2) * 11))
+BS = int(dat.shape[0] / ((TEST-2) * 6))
 LF = 52
-lf_tests = np.linspace(TEST, dat.shape[0], LF).astype(int)
+lf_tests = np.linspace(TEST, (TEST-2)*6, LF).astype(int)
 dats = np.array_split(dat, BS)
 x = np.array([int(s) for s in np.arange(10, TEST, 2)])
 X = np.zeros(LF * len(x))
@@ -58,12 +58,12 @@ xi = np.linspace(X.min(),X.max(),1000)
 yi = np.linspace(Y.min(),Y.max(),1000)
 
 # Z is a matrix of x-y values
-zi = griddata((X, Y), Z, (xi[None,:], yi[:,None]), method='linear')
+zi = griddata((X, Y), Z, (xi[None,:], yi[:,None]), method='nearest')
 
 np.save('zi', zi)
 np.save('xi', xi)
 np.save('yi', yi)
-plt.contourf(xi, yi, np.log(zi), 1000)
+plt.contourf(xi, yi, np.log(zi), 1000, vmax=0)
 c = plt.colorbar()
 c.set_label('log(error, CV)')
 plt.savefig('contours.png')

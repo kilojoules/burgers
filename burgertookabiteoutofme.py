@@ -35,7 +35,7 @@ phi = phi.T
 
 
 # choose # of modes to keep
-MODES = 2
+MODES = 10
 
 def genterms(MODES):
     TERM1 = np.zeros((MODES, MODES))
@@ -55,8 +55,9 @@ def dqdt(a, kk, nu=nu):
         t1 += nu * a[ii] * TERM1[ii, kk]
     t2 = 0
     for ii in range(a.shape[0]):
+        eddyvisc =  5e-1 * TERM1[ii, kk]
         for jj in range(a.shape[0]):
-            t2 += a[jj] * a[ii] * TERM2[ii, jj, kk]
+            t2 += a[jj] * a[ii] * (TERM2[ii, jj, kk] + eddyvisc)
     return t1 - t2
 
 # record weights associated with first time :)

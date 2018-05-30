@@ -37,9 +37,9 @@ n_save_t = 20
 dt = geturec(nu=nu, x=x, evolution_time=evolution_time, returndt=True)
 nt = int(evolution_time / dt)
 divider = int(nt / float(n_save_t))
-u_record = geturec(nu=nu, x=x, evolution_time=evolution_time, n_save_t=100)
-np.save('urec%f'%nu, u_record)
-#u_record = np.load('./urec%f.npy'%nu)
+#u_record = geturec(nu=nu, x=x, evolution_time=evolution_time, n_save_t=100)
+#np.save('urec%f'%nu, u_record)
+u_record = np.load('./urec%f.npy'%nu)
 ubar = u_record.mean(1)
 u_record -= ubar.reshape(-1, 1)
 print('flow fielded')
@@ -55,14 +55,14 @@ assert(np.allclose(u_record, np.dot(psi * D, phi)))
 
 
 # choose # of modes to keep
-MODES = 10
+MODES = 30
 
 # Calculate the weight functions
 #Q = np.dot(S[:, :MODES], phi[:, :MODES].T)
 
 # Generate expensive terms
 #@nb.jit
-EDDYVISC = .001
+EDDYVISC = 0.001
 def genterms(MODES):
     bk1 = np.zeros(MODES)
     bk2 = np.zeros(MODES)
@@ -74,11 +74,13 @@ def genterms(MODES):
     for kk in range(MODES):
         bk1[kk] = simps(psi[:, kk] * (-1 * ubar * d1(ubar, dx)), dx=dx)
         bk2[kk] = simps(psi[:, kk] * d2(ubar, dx), dx=dx)
-        bk3[kk] = simps(psi[:, kk] * EDDYVISC * d2(ubar, dx), dx=dx)
+        bk3[kk] = simps(psi[:, kk] * EDDYVISC * np.abs(d1(ubar, dx)) * d2(ubar, dx), dx=dx)
+        #bk3[kk] = simps(psi[:, kk] * EDDYVISC * d2(ubar, dx), dx=dx)
         for ii in range(MODES):
             lik1[ii, kk] = simps(psi[:, kk] * - 1 * ubar * d1(psi[:, kk], dx) - psi[:, kk] * d1(ubar, dx), dx=dx)
             lik2[ii, kk] = simps(psi[:, kk] * d2(psi[:, ii], dx), dx=dx)
-            lik3[ii, kk] = simps(psi[:, kk] * EDDYVISC * d2(psi[:, ii], dx), dx=dx)
+            lik3[ii, kk] = simps(psi[:, kk] * EDDYVISC * (np.abs(d1(ubar, dx)) * d2(psi[:, ii], dx) + np.abs(d1(psi[:, ii], dx)) * d2(ubar, dx)), dx=dx)
+            #lik3[ii, kk] = simps(psi[:, kk] * EDDYVISC * d2(psi[:, ii], dx), dx=dx)
             for jj in range(MODES):
                 nijk[ii, jj, kk] = simps(psi[:, kk] * psi[:, ii] * d1(psi[:, jj], dx), dx=dx)
     return bk1, bk2, bk3, lik1, lik2, lik3, nijk
@@ -89,6 +91,7 @@ TERM2 = nijk
 
 print("GENERATED!")
 
+#@nb.jit
 def dqdt(a, nu):
     # calculate first term
     TERM0 = bk1 + nu * bk2 + bk3
@@ -122,24 +125,21 @@ def evolve(a,nu=nu, dt=dt):
     a_record[:, -1] = a.copy()
     return a_record
 
-a = evolve(a0)
-print('evolved!')
+def ROM_go(PREDICT):
+    a = evolve(a0, nu=PREDICT)
+    u = np.dot(psi[:, :MODES], a[:, -1])
+    gradu = u.copy()
+    gradu[1:-1] = (u[2:] - u[:-2]) / (2 * dx)
+    gradu[0] = (u[1] - u[-1]) / (2 * dx)
+    gradu[-1] = (u[0] - u[-2]) / (2 * dx)
+    return np.max(np.abs(gradu))
 
-#MODES = 3
-ubar_red = np.dot(psi[:, :MODES] * D[:MODES], phi[:MODES, :])
-
-@nb.jit
-def maxgrad(u): return np.max(np.abs(u[:, -1]))
-
-def shockloc(u_record, x=x): 
-    a = u_record[:, -1] - 1. - 1e-4
-    return x[np.where(np.sign(a[:-1]) != np.sign(a[1:]))[0] + 1][-1]
-    #return x[1:][np.diff(np.sign(u_record[:, -1] - np.mean(u_record[:, -1]))) == -2]
-#def shockloc(u_record, x=x): return x[1:][np.diff(np.sign(u_record[:, -1] - np.mean(u_record[:, -1]))) == -2]
 
 END = -1
 PLOT = 1
-if PLOT:
+if PLOT and __name__=='__main__':
+    a = evolve(a0)
+    print('evolved!')
 
     # Generate flow field using forward method
     plt.plot(x, np.dot(psi[:, :MODES], a0), c='k', label="ROM Initial", lw=3)
@@ -150,17 +150,20 @@ if PLOT:
     plt.xlabel('x')
     plt.ylabel('u')
     plt.show()
+    
+    prev = np.dot(psi[:, :MODES], a[:, -1])
     #hey
     #plt.savefig('./compared.pdf')
     #savefig('./compared.pdf')
     
     # predict a new viscosity
     PREDICT = 1e-3
-    a, u_surr = evolve(a0, nu=PREDICT)
+    a = evolve(a0, nu=PREDICT)
+    plt.plot(x, np.dot(psi[:, :MODES], a0), c='k', label="ROM Initial", lw=3)
+    plt.plot(x, np.dot(psi[:, :MODES], a[:, -1]), c='yellow', label="ROM Evolved", lw=3)
+    plt.plot(x, geturec(nu=PREDICT, x=x, evolution_time=evolution_time)[:, -1], c='orange', label="Viscous Truth", lw=3)
     plt.plot(x, u_record[:, -1], c='gray', label="Base Truth", lw=3)
-    plt.plot(x, u_red_record_g6[:, END], label="Base ROM", lw=3)
-    plt.plot(x, geturec(nu=PREDICT, x=x, evolution_time=evolution_time)[:, -1], c='k', label="Viscous Truth", lw=3)
-    plt.plot(x, u_surr[:, -1], c='purple', label="Viscous ROM", lw=3)
+    plt.plot(x, prev, c='purple', label="Base ROM", lw=3)
     plt.legend(ncol=2)
     plt.ylabel("u")
     plt.xlabel("x")
@@ -172,23 +175,3 @@ if PLOT:
     plt.xlim(0, 100)
     plt.show()
     
-hey
-nus = np.array([1, 5e-1, 2e-1, 1e-1, 1e-2, 1e-3, 0])
-plt.plot(nus, np.array([maxgrad(geturec(nu)) for nu in nus]), c='r', marker='x')
-plt.plot(nus, np.array([maxgrad(evolve(a0, nu)[1]) for nu in nus]), c='b', marker='x')
-plt.ylabel(r"max($\nabla |u|$)")
-plt.xlabel(r"$\nu$")
-plt.show()
-
-
-ns = np.array([500, 1000, 1500, 2000, 2500, 5000, 10000, 20000, 30000, 40000, 60000, 80000])
-dxs = []
-grads = []
-for n in ns:
-   x = np.linspace(0, 4 * np.pi, n)
-   dxs.append(x[1] - x[0])
-   grads.append(shockloc(geturec(x=x), x=x))
-plt.plot(dxs, grads, marker='x')
-plt.ylabel("Location of the Shock")
-plt.xlabel("dx")
-plt.show()
