@@ -22,9 +22,9 @@ LW = .1
 ALPHA = 0.5
 f, ax = plt.subplots(4)
 plt.subplots_adjust(bottom=-.7, hspace=.4)
-TEST = 50
-BS = int(dat.shape[0] / ((300)))
-LF = 300
+TEST = 10
+LF = 109
+BS = int(dat.shape[0] / LF / TEST)
 dats = np.array_split(dat, BS)
 x = np.array([int(s) for s in np.arange(2, TEST+1, 1)])
 epsh = np.zeros((x.size, BS))
@@ -41,10 +41,10 @@ for _ in range(BS):
     def cv2(x):
         alpha = np.corrcoef(dat.hf.values[:x], dat.lf.values[:x])[0][1] * np.sqrt(np.var(dat.hf.values[:x]) / np.var(dat.lf.values[:x]))
         m = (TRUTH - (
-            np.mean(dat.hf.values[:x]) + alpha * (np.mean(dat.lf[:LF]) - np.mean(dat.lf.values[:x])))) ** 2
-        std = np.var(dat.hf.values[:x]) / x + (1. / float(x) - 1. /float(len(dat.lf[:LF]))) * (np.var(dat.lf[:LF]) * alpha ** 2 - 2 * alpha * np.corrcoef(dat.lf.values[:x], dat.hf.values[:x])[0][1] * np.sqrt(np.var(dat.lf[:LF]) * np.var(dat.hf[:x])))
-        timed = (np.sum(dat.t1[:x]) + np.sum(dat.t2[:LF])) / 3600
-        return m, std, alpha, timed, np.mean(dat.hf.values[:x]) + alpha * (np.mean(dat.lf[:LF]) - np.mean(dat.lf.values[:x]))
+            np.mean(dat.hf.values[:x]) + alpha * (np.mean(dat.lf[:LF*x]) - np.mean(dat.lf.values[:x])))) ** 2
+        std = np.var(dat.hf.values[:x]) / x + (1. / float(x) - 1. /float(len(dat.lf[:LF*x]))) * (np.var(dat.lf[:LF*x]) * alpha ** 2 - 2 * alpha * np.corrcoef(dat.lf.values[:x], dat.hf.values[:x])[0][1] * np.sqrt(np.var(dat.lf[:LF*x]) * np.var(dat.hf[:x])))
+        timed = (np.sum(dat.t1[:x]) + np.sum(dat.t2[:LF*x])) / 3600
+        return m, std, alpha, timed, np.mean(dat.hf.values[:x]) + alpha * (np.mean(dat.lf[:LF*x]) - np.mean(dat.lf.values[:x]))
     cv2 = np.vectorize(cv2)
             
     print (_, dat.shape)

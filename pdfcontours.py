@@ -2,17 +2,20 @@ import pandas as pd
 import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.neighbors import KernelDensity
+from scipy.stats import entropy
 from scipy.integrate import simps
+from sklearn.neighbors import KernelDensity
 from sklearn.grid_search import GridSearchCV
 from sklearn.cross_validation import LeaveOneOut, KFold
 
 # error pdfs #
-if True:
-    d1 = pd.read_csv('./d1.dat')
-    d2 = pd.read_csv('./collected.csv') 
-    d3 = pd.read_csv('./timedsamples.dat')
-    dat = pd.concat([d1, d2, d3])
+if False:
+    #d1 = pd.read_csv('./d1.dat')
+    #d2 = pd.read_csv('./collected.csv') 
+    #d3 = pd.read_csv('./timedsamples.dat')
+    #dat = pd.concat([d1, d2, d3])
+    hfDs, cvDs = [], []
+    dat = pd.read_csv('./collected.csv')
     dat.rename(columns={'nx7000':'hf', 'nx400':'lf', 'nu':'visc'}, inplace=1)
     f, ax = plt.subplots(2)
     plt.subplots_adjust(hspace=0.5)
@@ -26,7 +29,9 @@ if True:
         samplesx.append(samplesx[-1] * 2)
     colors = plt.cm.coolwarm(np.linspace(0, 1, len(samplesx)))
     print(samplesx)
+    bss = []
     for ll, BS in enumerate(samplesx):
+        bss.append(BS)
         LW = .1
         ALPHA = 0.5
         x = np.array([int(s) for s in np.arange(10, TEST+1, 2)])
@@ -54,6 +59,7 @@ if True:
         
         xs, ys = [], []
         y2s = []
+        lastpdfhf, lastpdfcv = None, None
         for ii in [np.where(x==TEST)[0][0]]:
             thesex, thesey, vesey = [], [], []
             for jj in range(epsh.shape[1]):
@@ -71,12 +77,16 @@ if True:
             kde2 = KernelDensity(kernel='gaussian', bandwidth=.05)
             kde2.fit(vesey.reshape(-1, 1))
             pdff = np.exp(kde2.score_samples(xx.reshape(-1, 1)))
+            if lastpdfcv: cvDs.append(entropy(pdff, laspdfcv))
+            lastpdfcv = pdff.copy()
             ax[0].plot(xx, pdff / simps(pdff, xx), label=BS, c=colors[ll])
             #xx = np.linspace(0, 2 * max(thesey), 1000)
             xx = np.linspace(min(thesey), max(thesey), 100)
             kde = KernelDensity(kernel='gaussian', bandwidth=.01)
             kde.fit(thesey.reshape(-1, 1))
             pdff = np.exp(kde.score_samples(xx.reshape(-1, 1)))
+            if lastpdfhf: hfDs.append(entropy(pdff, laspdfhf))
+            lastpdfhf = pdff.copy()
             ax[1].plot(xx, pdff / simps(pdff, xx), label=BS, c=colors[ll])
     ax[0].hist(vesey, 200, alpha=0.3, normed=True)
     ax[1].hist(thesey, 200, alpha=0.3, normed=True)
@@ -91,9 +101,19 @@ if True:
     plt.clf()
     plt.close()
     
+    plt.plot(bss[1:], lastpdfhf, label='HF')
+    plt.plot(bss[1:], lastpdfcv, label='CV')
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.legend()
+    plt.ylabel('D')
+    plt.xlabel('n')
+    plt.show() 
+
+    
 
 # raw values
-if False:    
+if True:    
     d1 = pd.read_csv('./d1.dat')
     d2 = pd.read_csv('./collected.csv')
     d3 = pd.read_csv('./timedsamples.dat')
@@ -102,8 +122,13 @@ if False:
     #dat = dat.convert_objects(convert_numeric=True)
     f, ax = plt.subplots(2, sharex=True)
     #plt.subplots_adjust(bottom=-2, hspace=1)
-    SAMPS = [500]
+    SAMPS = [50]
     while SAMPS[-1] < 30000: SAMPS.append(SAMPS[-1] * 2)
+    BINS = 100
+    HFENTROPIES = []
+    LFENTROPIES = []
+    lflastp = None
+    hflastp = None
     colors = plt.cm.coolwarm(np.linspace(0, 1, len(SAMPS)))
     for ll, n in enumerate(SAMPS):
         HF = dat.hf[:n]
@@ -119,6 +144,9 @@ if False:
         kde.fit(HF[:, None])
         myfit = np.exp(kde.score_samples(xx.reshape(-1, 1)))
         myfit /= simps(myfit, xx)
+        if hflastp is not None: HFENTROPIES.append(entropy(myfit, hflastp))
+        hflastp = myfit.copy()
+        xx = np.linspace(11, 19, 1000)
         ax[0].plot(xx, np.exp(kde.score_samples(xx.reshape(-1, 1))), c=colors[ll], label=n)
         #xx = np.linspace(min(LF), max(LF), 100)
         kde = KernelDensity(kernel='gaussian', bandwidth=.1)
@@ -126,6 +154,8 @@ if False:
         pdff = np.exp(kde.score_samples(xx.reshape(-1, 1)))
         pdff /= simps(pdff, xx)
         ax[1].plot(xx, pdff, c=colors[ll])
+        if lflastp is not None: LFENTROPIES.append(entropy(pdff, lflastp))
+        lflastp = pdff.copy()
     l = ax[0].legend(ncol=4, bbox_to_anchor=[.9, 1.5])
     l.set_title('Number of Samples')
     ax[0].hist(HF, 50, alpha=0.6, normed=True)
@@ -136,19 +166,27 @@ if False:
     ax[1].set_ylabel('probability density') 
     plt.savefig('./rawPDFs.pdf', bbox_inches='tight')
     plt.clf()
-    
-    
+    plt.close()
+
+    plt.plot(SAMPS[1:], np.abs(HFENTROPIES))
+    plt.plot(SAMPS[1:], np.abs(LFENTROPIES))
+    plt.ylabel('D')
+    plt.ylabel('n')
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.savefig('./pdfDees.pdf')
+
 # expected values #
-if True:
+if False:
     
     d1 = pd.read_csv('./d1.dat')
     d2 = pd.read_csv('./collected.csv')
     d3 = pd.read_csv('./timedsamples.dat')
     dat = pd.concat([d1, d2, d3])
     dat.rename(columns={'nx7000':'hf', 'nx400':'lf', 'nu':'visc'}, inplace=1)
-    TEST = 50
-    LF = 300
-    bigBS = int(dat.shape[0] / (TEST * 6))
+    TEST = 10
+    LF = 109
+    bigBS = int(dat.shape[0] / (TEST * LF))
     dats = np.array_split(dat, bigBS)
     f, ax = plt.subplots(2, sharex=True)
     SAMPS = [50]
@@ -164,7 +202,7 @@ if True:
             def cv2(x):
                 alpha = np.corrcoef(dat.hf.values[:x], dat.lf.values[:x])[0][1] * np.sqrt(np.var(dat.hf.values[:x]) / np.var(dat.lf.values[:x]))
                 m = (np.mean(dat.hf[TEST:]) - (
-                    np.mean(dat.hf.values[:x]) + alpha * (np.mean(dat.lf[:LF]) - np.mean(dat.lf.values[:x])))) ** 2
+                    np.mean(dat.hf.values[:x]) + alpha * (np.mean(dat.lf[:LF*x]) - np.mean(dat.lf.values[:x])))) ** 2
                 std = np.var(dat.hf.values[:x]) / x + (1. / float(x) - 1. /float(len(dat.lf))) * (np.var(dat.lf) * alpha ** 2 - 2 * alpha * np.corrcoef(dat.lf.values[:x], dat.hf.values[:x])[0][1] * np.sqrt(np.var(dat.lf) * np.var(dat.hf[:x])))
                 return m, std, alpha, np.mean(dat.hf.values[:x]) + alpha * (np.mean(dat.lf) - np.mean(dat.lf.values[:x]))
             CC.append(cv2(50)[-1])

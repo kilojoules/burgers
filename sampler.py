@@ -1,42 +1,30 @@
 from completeSolver import geturec
-import time
 import numpy as np
-x = np.linspace(0, np.pi, 7000)
-def d1(arr, dnu):
-     outv = np.zeros(arr.size)
-     outv[0] = (arr[1] - arr[0]) / dnu
-     outv[1] = (arr[2] - arr[0]) / (2 * dnu)
-     outv[2:-2] = (-1 * arr[4:] + 8 * arr[3:-1] - 8 * arr[1:-3] + arr[:-4]) / (12 * dnu)
-     outv[-1] = (arr[-1] - arr[-2]) / dnu
-     outv[-2] = (arr[-1] - arr[-3]) / (2 * dnu)
-     return outv
-for VISC in np.random.uniform(1e-3, 1e-5, 3000000):
-#for VISC in [0.00015716675169]:
-#VISC = 0.000920109564951
-    x = np.linspace(0, np.pi, 7002)[:-1]
-    dx = x[1] - x[0]
-    u0 = np.sin(x) ** 2
-    tic = time.time()
-    u = geturec(x, nu=VISC, u0=u0, evolution_time=0.96)[:, -1]
-    toc = time.time()
-    t1 = tic - toc
-    qoi1 = np.max(np.abs(np.gradient(u, dx)))
-    #qoi1 = np.max(np.abs(d1(u, dx)))
-    x = np.linspace(0, np.pi, 7002)[:-1]
-    dx = x[1] - x[0]
-    u0 = np.sin(x) ** 2
-    tic = time.time()
-    u = geturec(x, nu=VISC, evolution_time=0.96, convstrategy='2c', diffstrategy='3c', timestrategy='fe')[:, -1]
-    toc = time.time()
-    t2 = tic - toc
-    qoir = np.max(np.abs(np.gradient(u, dx)))
-    x = np.linspace(0, np.pi, 402)[:-1]
-    u0 = np.sin(x) ** 2
-    dx = x[1] - x[0]
-    tic = time.time()
-    u = geturec(x, nu=VISC, u0=u0, evolution_time=0.96)[:, -1]
-    toc = time.time()
-    t3 = tic - toc
-    qoiLF = np.max(np.abs(np.gradient(u, dx)))
-    #qoiLF = np.max(np.abs(d1(u, dx)))
-    print(','.join([str(s) for s in [VISC, qoi1, qoir, qoiLF, t1, t2, t3]]) + '\n')
+def mgrad(u, dx):
+    gradu = u.copy()
+    gradu[1:-1] = (u[2:] - u[:-2]) / 2 / dx
+    gradu[-1] = (u[0] - u[-2]) / 2 / dx
+    gradu[0] = (u[1] - u[-1]) / 2 / dx
+    return np.max(np.abs(gradu))
+x1 = np.linspace(0, np.pi, 5002)[:-1]
+dx1 = x1[1] - x1[0]
+x2 = np.linspace(0, np.pi, 50002)[:-1]
+dx2 = x1[1] - x1[0]
+ET = 1.
+np.random.seed(299)
+#nus = np.random.uniform(0.00001, .00000005, 2)
+nus = np.random.uniform(1e-4, 1e-5, 500)
+logg = open('sampsagainagain.dat', 'w')
+logg.write('nu,nx5000_4,nx50000_2,nx50000_4\n')
+for nu in nus:
+    print(nu)
+    u1 = geturec(x=x1, nu=nu, evolution_time=ET)
+    qoi1 = mgrad(u1[:, -1], dx=dx1)
+    u2 = geturec(x=x2, nu=nu, evolution_time=ET, convstrategy='2c', diffstrategy='3c', timestrategy='fe')
+    qoi2 = mgrad(u2[:, -1], dx=dx2)
+    print('ok...')
+    u3 = geturec(x=x2, nu=nu, evolution_time=ET)
+    qoi3 = mgrad(u3[:, -1], dx=dx2)
+    print(nu, qoi1, qoi2, qoi3)
+    logg.write(','.join([str(s) for s in [nu, qoi1, qoi2, qoi3]])+'\n')
+logg.close()
